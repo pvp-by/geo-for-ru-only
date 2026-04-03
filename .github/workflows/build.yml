@@ -60,7 +60,7 @@ jobs:
       - name: Build custom geoip.dat
         run: |
           # Устанавливаем официальный упаковщик v2dat
-          go install github.com/sxyazi/v2dat/cmd/v2dat@latest
+          go install github.com/urlesistiana/v2dat@latest
           
           # Собираем geoip.dat из текстовых файлов
           ~/go/bin/v2dat pack geoip -o ./ -n geoip.dat ./geoip-raw/ru.txt ./geoip-raw/private.txt
