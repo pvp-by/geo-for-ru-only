@@ -59,7 +59,7 @@ jobs:
         run: |
           go install github.com/urlesistiana/v2dat@latest
           # Собираем geoip.dat
-          ~/go/bin/v2dat pack geoip -o ./ geoip-raw/ru.txt geoip-raw/private.txt
+          ~/go/bin/v2dat pack geoip -o ./ -n geoip.dat geoip-raw/ru.txt geoip-raw/private.txt
           
       - name: Generate Release Notes
         run: |
