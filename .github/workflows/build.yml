@@ -28,11 +28,21 @@ jobs:
           # Список нужных вам категорий
           CATEGORIES="vk kinopoisk aviasales drweb wildberries rutube ozon wink 2gis kaspersky ok yandex okko avito mosmetro dzen mailru mailru-group category-travel-ru x5 category-gov-ru category-entertainment-ru category-retail-ru category-medicine-ru category-media-ru category-ecommerce-ru category-ru category-bank-ru"
           
-          # Копируем только нужные файлы
-          for cat in $CATEGORIES; do
-            if [ -f "data/$cat" ]; then
-              cp "data/$cat" "custom-data/"
+          # Функция для захвата файла и всех других файлов, на которые он ссылается (include:)
+          copy_with_deps() {
+            local file=$1
+            if [ -f "data/$file" ] && [ ! -f "custom-data/$file" ]; then
+              cp "data/$file" "custom-data/"
+              # Ищем зависимости
+              grep -Eo "^include:[a-zA-Z0-9_-]+" "data/$file" | cut -d':' -f2 | while read -r dep; do
+                copy_with_deps "$dep"
+              done
             fi
+          }
+          
+          # Копируем только нужные файлы и их зависимости
+          for cat in $CATEGORIES; do
+            copy_with_deps "$cat"
           done
           
           # Подменяем папку data нашей и собираем
