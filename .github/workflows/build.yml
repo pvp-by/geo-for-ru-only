@@ -51,15 +51,37 @@ jobs:
           
           if [ -f dlc.dat ]; then mv dlc.dat geosite.dat; fi
           
-      - name: Download standard geoip.dat
+      - name: Build custom geoip.dat
         run: |
-          # Просто скачиваем geoip от Loyalsoldier, чтобы прикрепить его к вашему релизу
-          curl -sSL "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat" -o geoip.dat
+          # Скачиваем официальный компилятор вместо сломанной утилиты v2dat
+          git clone https://github.com/v2fly/geoip.git geoip-builder
+          cd geoip-builder
+          
+          mkdir -p custom-ips
+          curl -sSL "https://raw.githubusercontent.com/v2fly/geoip/release/text/ru.txt" -o custom-ips/ru.txt
+          curl -sSL "https://raw.githubusercontent.com/v2fly/geoip/release/text/private.txt" -o custom-ips/private.txt
+          
+          # Генерируем конфигурацию для компилятора
+          cat << 'EOF' > config.json
+          {
+            "input": [
+              { "type": "text", "action": "add", "args": { "name": "ru", "uri": "custom-ips/ru.txt" } },
+              { "type": "text", "action": "add", "args": { "name": "private", "uri": "custom-ips/private.txt" } }
+            ],
+            "output": [
+              { "type": "v2rayGeoIPDat", "action": "output", "args": { "outputName": "geoip.dat", "outputDir": "../" } }
+            ]
+          }
+          EOF
+          
+          # Собираем ваш собственный мини-файл geoip.dat
+          go run . -c config.json
+          cd ..
           
       - name: Publish to Github Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Минималистичный geosite.dat + стандартный geoip.dat" > release.txt
+          echo "Минималистичные сборки V2ray DAT файлов (Geosite и GeoIP)." > release.txt
           gh release delete latest --cleanup-tag -y || true
           gh release create "latest" geosite.dat geoip.dat -F release.txt -t "Lightweight Custom Rules"
